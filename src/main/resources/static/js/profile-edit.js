@@ -111,4 +111,36 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
     });
+
+    deleteProfileBtn.addEventListener('click', async (e) => {
+        e.preventDefault();
+
+        if (!confirm('Вы уверены, что хотите удалить свой профиль? Это действие невозможно отменить.')) {
+            return;
+        }
+
+        if (!confirm('ВНИМАНИЕ! Все ваши данные будут безвозвратно удалены. Подтвердите удаление профиля.')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`http://localhost:8081/api/v1/users/delete/${userId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.message || 'Ошибка удаления профиля');
+            }
+
+            localStorage.removeItem('token');
+            alert('Ваш профиль был успешно удален');
+            window.location.href = '/index.html';
+        } catch (error) {
+            alert('Ошибка при удалении профиля: ' + error.message);
+        }
+    });
 });
