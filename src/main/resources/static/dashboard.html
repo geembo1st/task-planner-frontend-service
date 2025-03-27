@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Task Planner - Dashboard</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+<header class="dashboard-header">
+    <div class="header-content">
+        <h1 id="greeting">Загрузка...</h1>
+        <button id="logoutBtn" class="btn logout-btn">Выйти</button>
+    </div>
+</header>
+
+<main class="dashboard-container">
+    <section class="user-actions">
+        <button id="createBoardBtn" class="btn">Создать доску</button>
+        <button id="editProfileBtn" class="btn">Редактировать профиль</button>
+    </section>
+
+    <section class="boards-section">
+        <h2>Ваши доски</h2>
+        <div id="boardsList" class="boards-grid">
+        </div>
+    </section>
+</main>
+
+<div id="createBoardModal" class="modal">
+    <div class="modal-content">
+        <span class="close-modal">&times;</span>
+        <h3>Создать новую доску</h3>
+        <form id="createBoardForm">
+            <div class="form-group">
+                <label for="boardTitle">Название:</label>
+                <input type="text" id="boardTitle" required maxlength="100">
+                <span class="error" id="boardTitleError"></span>
+            </div>
+            <div class="form-group">
+                <label for="boardDescription">Описание:</label>
+                <textarea id="boardDescription" maxlength="255"></textarea>
+            </div>
+            <button type="submit" class="btn">Создать</button>
+        </form>
+    </div>
+</div>
+
+<script src="/js/dashboard.js"></script>
+</body>
+</html>

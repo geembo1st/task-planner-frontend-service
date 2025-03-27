@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Редактирование доски</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+<header class="dashboard-header">
+    <div class="header-content">
+        <h1>Редактирование доски</h1>
+        <button onclick="location.href='/dashboard.html'" class="btn">Назад</button>
+    </div>
+</header>
+
+<main class="dashboard-container">
+    <form id="editBoardForm" class="board-form">
+        <div class="form-group">
+            <label for="boardTitle">Название доски:</label>
+            <input type="text" id="boardTitle" required maxlength="100">
+            <span class="error" id="titleError"></span>
+        </div>
+
+        <div class="form-group">
+            <label for="boardDescription">Описание:</label>
+            <textarea id="boardDescription" maxlength="255"></textarea>
+        </div>
+
+        <button type="submit" class="btn">Сохранить изменения</button>
+    </form>
+
+    <section class="tasks-section">
+        <h2>Задачи</h2>
+        <button id="addTaskBtn" class="btn">Добавить задачу</button>
+        <div id="tasksList">
+        </div>
+    </section>
+</main>
+
+<div id="taskModal" class="modal">
+    <div class="modal-content">
+        <span class="close-modal">&times;</span>
+        <h3>Новая задача</h3>
+        <form id="taskForm">
+            <div class="form-group">
+                <label for="taskTitle">Название:</label>
+                <input type="text" id="taskTitle" required maxlength="200">
+                <span class="error" id="taskTitleError"></span>
+            </div>
+            <div class="form-group">
+                <label for="taskDescription">Описание:</label>
+                <textarea id="taskDescription" maxlength="300"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="taskDueDate">Срок выполнения:</label>
+                <input type="datetime-local" id="taskDueDate">
+            </div>
+            <button type="submit" class="btn">Создать задачу</button>
+        </form>
+    </div>
+</div>
+<script src="/js/board-edit.js"></script>
+</body>
+</html>
