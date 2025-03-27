@@ -4,90 +4,102 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    const greetingElement = document.getElementById('greeting');
-    const logoutBtn = document.getElementById('logoutBtn');
-    const createBoardBtn = document.getElementById('createBoardBtn');
-    const editProfileBtn = document.getElementById('editProfileBtn');
-    const boardsList = document.getElementById('boardsList');
-    const statusFilter = document.getElementById('statusFilter');
-    const modal = document.getElementById('createBoardModal');
-    const closeModal = document.querySelector('.close-modal');
-    const createBoardForm = document.getElementById('createBoardForm');
+    const elements = {
+        greeting: document.getElementById('greeting'),
+        logoutBtn: document.getElementById('logoutBtn'),
+        createBoardBtn: document.getElementById('createBoardBtn'),
+        editProfileBtn: document.getElementById('editProfileBtn'),
+        boardsList: document.getElementById('boardsList'),
+        modal: document.getElementById('createBoardModal'),
+        closeModal: document.querySelector('.close-modal'),
+        createBoardForm: document.getElementById('createBoardForm'),
+        boardTitle: document.getElementById('boardTitle'),
+        boardDescription: document.getElementById('boardDescription'),
+        boardTitleError: document.getElementById('boardTitleError')
+    };
+
+    for (const [key, element] of Object.entries(elements)) {
+        if (!element) {
+            console.error(`Не найден элемент: ${key}`);
+            return;
+        }
+    }
 
     try {
         const user = await fetchApi('/api/v1/users/profile');
-        greetingElement.textContent = `Здравствуйте, ${user.username}, вот ваши доски`;
-
+        elements.greeting.textContent = `Здравствуйте, ${escapeHtml(user.username)}, вот ваши доски`;
         await loadBoards(user.id);
     } catch (error) {
-        showError('greeting', 'Ошибка загрузки данных: ' + error.message);
+        console.error('Ошибка загрузки данных:', error);
+        elements.greeting.textContent = 'Ошибка загрузки данных';
     }
 
-    logoutBtn.addEventListener('click', () => {
+    elements.logoutBtn.addEventListener('click', logout);
+    elements.createBoardBtn.addEventListener('click', () => elements.modal.style.display = 'block');
+    elements.closeModal.addEventListener('click', () => closeModal(elements.modal));
+    elements.editProfileBtn.addEventListener('click', () => window.location.href = '/profile-edit.html');
+    elements.createBoardForm.addEventListener('submit', handleBoardCreate);
+
+    window.addEventListener('click', (event) => {
+        if (event.target === elements.modal) {
+            closeModal(elements.modal);
+        }
+    });
+
+    function logout() {
         localStorage.removeItem('token');
-        localStorage.removeItem('refreshToken');
         window.location.href = '/index.html';
-    });
+    }
 
-    createBoardBtn.addEventListener('click', () => {
-        modal.style.display = 'block';
-    });
-
-    closeModal.addEventListener('click', () => {
+    function closeModal(modal) {
         modal.style.display = 'none';
-    });
+        elements.createBoardForm.reset();
+        elements.boardTitleError.textContent = '';
+    }
 
-    editProfileBtn.addEventListener('click', () => {
-        window.location.href = '/profile-edit.html';
-    });
-
-    statusFilter.addEventListener('change', async () => {
-        const userId = await getCurrentUserId();
-        await loadBoards(userId);
-    });
-
-    createBoardForm.addEventListener('submit', async (e) => {
+    async function handleBoardCreate(e) {
         e.preventDefault();
-        const title = document.getElementById('boardTitle').value.trim();
-        const description = document.getElementById('boardDescription').value.trim();
+
+        const title = elements.boardTitle.value.trim();
+        const description = elements.boardDescription.value.trim();
+
+        if (!title) {
+            elements.boardTitleError.textContent = 'Название обязательно';
+            return;
+        }
 
         try {
-            await fetchApi('/api/v1/boards', 'POST', {
-                title,
-                description
-            });
-
-            modal.style.display = 'none';
-            createBoardForm.reset();
+            await fetchApi('/api/v1/boards', 'POST', { title, description });
+            closeModal(elements.modal);
             const userId = await getCurrentUserId();
             await loadBoards(userId);
         } catch (error) {
-            showError('boardTitleError', error.message);
+            console.error('Ошибка создания доски:', error);
+            elements.boardTitleError.textContent = error.message || 'Ошибка при создании доски';
         }
-    });
+    }
 
     async function loadBoards(userId) {
         try {
             const boards = await fetchApi(`/api/v1/boards/user/${userId}`);
-
             const boardsWithTasks = await Promise.all(
-                boards.map(async board => {
-                    const tasks = await fetchApi(`/api/v1/boards/${board.id}/tasks`);
-                    return {...board, tasks};
-                })
+                boards.map(async board => ({
+                    ...board,
+                    tasks: await fetchApi(`/api/v1/boards/${board.id}/tasks`).catch(() => []) // Если ошибка - пустой массив задач
+                }))
             );
-
             renderBoards(boardsWithTasks);
         } catch (error) {
-            showError('boardsList', 'Ошибка загрузки досок: ' + error.message);
+            console.error('Ошибка загрузки досок:', error);
+            elements.boardsList.innerHTML = '<p class="error-message">Ошибка загрузки досок</p>';
         }
     }
 
     function renderBoards(boards) {
-        boardsList.innerHTML = '';
+        elements.boardsList.innerHTML = '';
 
-        if (boards.length === 0) {
-            boardsList.innerHTML = '<p>У вас пока нет досок</p>';
+        if (!boards || boards.length === 0) {
+            elements.boardsList.innerHTML = '<p class="no-boards">У вас пока нет досок</p>';
             return;
         }
 
@@ -96,38 +108,57 @@ document.addEventListener('DOMContentLoaded', async () => {
             boardElement.className = 'board-card';
             boardElement.innerHTML = `
                 <div class="board-header">
-                    <h3 class="board-title">${board.title}</h3>
+                    <h3 class="board-title">${escapeHtml(board.title)}</h3>
                     <div class="board-actions">
-                        <button onclick="location.href='/board-edit.html?boardId=${board.id}'" class="btn">Редактировать</button>
-                        <button onclick="deleteBoard(${board.id})" class="btn delete-btn">Удалить</button>
+                        <button class="btn edit-board" data-board-id="${board.id}">Редактировать</button>
+                        <button class="btn delete-board" data-board-id="${board.id}">Удалить</button>
                     </div>
                 </div>
-                ${board.description ? `<p class="board-description">${board.description}</p>` : ''}
-                <p class="board-date">Создано: ${new Date(board.createdAt).toLocaleString()}</p>
-                
+                ${board.description ? `<p class="board-description">${escapeHtml(board.description)}</p>` : ''}
+                <p class="board-date">Создано: ${formatDate(board.createdAt)}</p>
                 <div class="tasks-container">
                     <h4>Задачи:</h4>
-                    <div class="tasks-list" id="tasks-${board.id}">
-                        ${renderTasks(board.tasks || [])}
-                    </div>
+                    <div class="tasks-list">${renderTasks(board.tasks || [])}</div>
                 </div>
             `;
-            boardsList.appendChild(boardElement);
+            elements.boardsList.appendChild(boardElement);
+        });
+
+        document.querySelectorAll('.delete-board').forEach(btn => {
+            btn.addEventListener('click', () => handleBoardDelete(btn.dataset.boardId));
+        });
+
+        document.querySelectorAll('.edit-board').forEach(btn => {
+            btn.addEventListener('click', () => {
+                window.location.href = `/board-edit.html?boardId=${btn.dataset.boardId}`;
+            });
         });
     }
 
-    function renderTasks(tasks) {
-        if (tasks.length === 0) {
-            return '<p class="no-tasks">Нет задач</p>';
+    async function handleBoardDelete(boardId) {
+        if (!confirm('Вы уверены, что хотите удалить эту доску? Все задачи также будут удалены.')) return;
+
+        try {
+            await fetchApi(`/api/v1/boards/${boardId}`, 'DELETE');
+            const userId = await getCurrentUserId();
+            await loadBoards(userId);
+        } catch (error) {
+            console.error('Ошибка удаления доски:', error);
+            alert('Ошибка при удалении: ' + (error.message || 'Неизвестная ошибка'));
         }
+    }
+
+    function renderTasks(tasks) {
+        if (!tasks || tasks.length === 0) return '<p class="no-tasks">Нет задач</p>';
 
         return tasks.map(task => `
-            <div class="task-item" data-task-id="${task.id}">
+            <div class="task-item">
                 <div class="task-main">
-                    <h5 class="task-title">${task.title}</h5>
+                    <h5 class="task-title">${escapeHtml(task.title)}</h5>
+                    <span class="task-status ${(task.status || 'NEW').toLowerCase()}">${task.status || 'NEW'}</span>
                 </div>
-                ${task.description ? `<p class="task-description">${task.description}</p>` : ''}
-                ${task.dueDate ? `<p class="task-due">Выполнить до: ${new Date(task.dueDate).toLocaleString()}</p>` : ''}
+                ${task.description ? `<p class="task-description">${escapeHtml(task.description)}</p>` : ''}
+                ${task.dueDate ? `<p class="task-due">Выполнить до: ${formatDate(task.dueDate)}</p>` : ''}
                 <div class="task-actions">
                     <button class="btn mark-done" data-task-id="${task.id}">
                         ${task.status === 'DONE' ? 'Вернуть в работу' : 'Выполнить'}
@@ -137,56 +168,29 @@ document.addEventListener('DOMContentLoaded', async () => {
         `).join('');
     }
 
-    window.deleteBoard = async (boardId) => {
-        if (confirm('Вы уверены, что хотите удалить эту доску?')) {
-            try {
-                const response = await fetch(`http://localhost:8081/api/v1/boards/${boardId}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
-                    }
-                });
+    function escapeHtml(unsafe) {
+        if (!unsafe) return '';
+        return unsafe.toString()
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
 
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(errorText || 'Ошибка при удалении');
-                }
-
-                if (response.status !== 204) {
-                    await response.json();
-                }
-
-                const userId = await getCurrentUserId();
-                await loadBoards(userId);
-            } catch (error) {
-                console.error('Ошибка удаления доски:', error);
-                alert(`Ошибка при удалении: ${error.message}`);
-            }
-        }
-    };
-
-    window.markTaskDone = async (taskId) => {
+    function formatDate(dateString) {
+        if (!dateString) return 'не указана';
         try {
-            await fetchApi(`/api/v1/tasks/${taskId}/done`, 'PATCH');
-            const userId = await getCurrentUserId();
-            await loadBoards(userId);
-        } catch (error) {
-            alert('Ошибка изменения статуса: ' + error.message);
+            return new Date(dateString).toLocaleString();
+        } catch {
+            return dateString;
         }
-    };
+    }
 });
 
 async function getCurrentUserId() {
     const user = await fetchApi('/api/v1/users/profile');
     return user.id;
-}
-
-function showError(elementId, message) {
-    const element = document.getElementById(elementId);
-    if (element) {
-        element.textContent = message;
-        element.style.display = 'block';
-    }
 }
 
 async function fetchApi(endpoint, method = 'GET', body = null) {
@@ -204,9 +208,7 @@ async function fetchApi(endpoint, method = 'GET', body = null) {
         }
     };
 
-    if (body) {
-        options.body = JSON.stringify(body);
-    }
+    if (body) options.body = JSON.stringify(body);
 
     const response = await fetch(`http://localhost:8081${endpoint}`, options);
 
@@ -216,18 +218,13 @@ async function fetchApi(endpoint, method = 'GET', body = null) {
         throw new Error('Session expired');
     }
 
-    if (response.status === 204) {
-        return null;
+    if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(error.message || 'Ошибка API');
     }
 
-    if (!response.ok) {
-        const errorText = await response.text();
-        try {
-            const errorJson = JSON.parse(errorText);
-            throw new Error(errorJson.message || 'Ошибка API');
-        } catch {
-            throw new Error(errorText || 'Ошибка API');
-        }
+    if (response.status === 204 || response.headers.get('content-length') === '0') {
+        return null;
     }
 
     return response.json();
