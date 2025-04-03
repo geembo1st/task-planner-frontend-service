@@ -210,7 +210,7 @@ async function fetchApi(endpoint, method = 'GET', body = null) {
 
     if (body) options.body = JSON.stringify(body);
 
-    const response = await fetch(`http://localhost:8081${endpoint}`, options);
+    const response = await fetch(`http://api-gateway:8081${endpoint}`, options);
 
     if (response.status === 401) {
         localStorage.removeItem('token');

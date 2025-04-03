@@ -51,7 +51,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     async function loadBoardData() {
         try {
-            const response = await fetch(`http://localhost:8081/api/v1/boards/${boardId}`, {
+            const response = await fetch(`http://api-gateway:8081/api/v1/boards/${boardId}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -70,7 +70,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     async function loadTasks() {
         try {
-            const response = await fetch(`http://localhost:8081/api/v1/boards/${boardId}/tasks`, {
+            const response = await fetch(`http://api-gateway:8081/api/v1/boards/${boardId}/tasks`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -124,7 +124,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const description = document.getElementById('boardDescription').value.trim();
 
         try {
-            const response = await fetch(`http://localhost:8081/api/v1/boards/${boardId}`, {
+            const response = await fetch(`http://api-gateway:8081/api/v1/boards/${boardId}`, {
                 method: 'PUT',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -150,7 +150,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const dueDate = document.getElementById('taskDueDate').value;
 
         try {
-            const response = await fetch(`http://localhost:8081/api/v1/tasks/${boardId}`, {
+            const response = await fetch(`http://api-gateway:8081/api/v1/tasks/${boardId}`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -181,7 +181,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!confirm('Вы уверены, что хотите удалить эту задачу?')) return;
 
         try {
-            const response = await fetch(`http://localhost:8081/api/v1/tasks/${taskId}`, {
+            const response = await fetch(`http://api-gateway:8081/api/v1/tasks/${taskId}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -199,7 +199,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     async function markTaskAsDone(taskId, button) {
         try {
-            const response = await fetch(`http://localhost:8081/api/v1/tasks/${taskId}/done`, {
+            const response = await fetch(`http://api-gateway:8081/api/v1/tasks/${taskId}/done`, {
                 method: 'PATCH',
                 headers: {
                     'Authorization': `Bearer ${token}`

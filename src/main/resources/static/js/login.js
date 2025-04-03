@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!isValid) return;
 
         try {
-            const response = await fetch('http://localhost:8081/api/v1/auth/login', {
+            const response = await fetch('http://api-gateway:8081/api/v1/auth/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

@@ -12,7 +12,7 @@ document.getElementById("register-form").addEventListener("submit", async functi
     };
 
     try {
-        const response = await fetch('http://localhost:8081/api/v1/auth/register', {
+        const response = await fetch('http://api-gateway:8081/api/v1/auth/register', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const passwordInput = document.getElementById('password');
 
     try {
-        const response = await fetch(`http://localhost:8081/api/v1/users/profile`, {
+        const response = await fetch(`http://api-gateway:8081/api/v1/users/profile`, {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
@@ -79,7 +79,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!isValid) return;
 
         try {
-            const response = await fetch(`http://localhost:8081/api/v1/users/update/${userId}`, {
+            const response = await fetch(`http://api-gateway:8081/api/v1/users/update/${userId}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -124,7 +124,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         try {
-            const response = await fetch(`http://localhost:8081/api/v1/users/delete/${userId}`, {
+            const response = await fetch(`http://api-gateway:8081/api/v1/users/delete/${userId}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`
